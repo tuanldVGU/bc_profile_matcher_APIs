@@ -1,21 +1,7 @@
 {
   "scripts": {
-    "rimraf": "./node_modules/rimraf/bin.js",
-    "build": "rimraf ./build && tsc",
     "start:dev": "nodemon",
-    "start": "npm run build && node build/index.js",
-    "lint": "eslint . --ext .ts",
-    "prettier-format": "run-script-os",
-    "prettier-format:win32": "prettier --config .prettierrc \"./src/**/*.ts\" --write",
-    "prettier-format:darwin:linux": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "prettier-format:default": "prettier --config .prettierrc 'src/**/*.ts' --write",
-    "prettier-watch": "run-script-os",
-    "prettier-watch:win32": "onchange \"src/**/*.ts\" -- prettier --write {{changed}}",
-    "prettier-watch:darwin:linux": "onchange 'src/**/*.ts' -- prettier --write {{changed}}",
-    "prettier-watch:default": "onchange 'src/**/*.ts' -- prettier --write {{changed}}",
-    "test": "jest",
-    "test:dev": "jest --watchAll",
-    "start:temp": "nodemon /src/temp.js --inspect=9230"
+    "start": "node app.js"
   },
   "devDependencies": {
     "@types/node": "^18.7.16",
