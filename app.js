@@ -39,10 +39,6 @@ app.get('/', function (req, res) {
 });
 
 app.post('/movies', jsonParser, function (req, res) {
-  // console.log(req.body)
-  // res.header("Access-Control-Allow-Origin", "*");
-  // res.send("OK")
-
   (async () => {
 
     const psi = await PSI()
@@ -56,6 +52,52 @@ app.post('/movies', jsonParser, function (req, res) {
     const server = psi.server.createWithNewKey(revealIntersection)
 
     const serverInputs = ["Iron Man (2008)", "The Incredible Hulk (2008)", "Iron Man 2 (2010)", "Thor (2011)", "Captain America: The First Avenger (2011)", "The Avengers (2012)", "Iron Man 3 (2013)", "Thor: The Dark World (2013)", "Captain America: The Winter Soldier (2014)", "Guardians of the Galaxy (2014)"]
+  
+    const serverSetup = server.createSetupMessage(
+      fpr,
+      numClientElements,
+      serverInputs
+    )
+  
+    // let data: number[] = [] 
+    // for (const [key , value] of Object.entries(req.body.data)) {
+    //   data.push(value as number)
+    // }
+    const clientRequest = Uint8Array.from(Uint8Array.from(req.body.data))
+    
+
+    const deserializedClientRequest = psi.request.deserializeBinary(
+      clientRequest
+    )
+  
+    // Process the client's request and return to the client
+    const serverResponse = server.processRequest(deserializedClientRequest)
+    const serializedServerResponse = serverResponse.serializeBinary()
+
+    // Serialize the server setup. Will be an Uint8Array.
+    const serializedServerSetup = serverSetup.serializeBinary()
+    res.header("Access-Control-Allow-Origin", "*");
+    res.send({
+      serializedServerResponse: Array.from(serializedServerResponse),
+      serializedServerSetup: Array.from(serializedServerSetup)
+    })
+  })()  
+})
+
+app.post('/maps', jsonParser, function (req, res) {
+  (async () => {
+
+    const psi = await PSI()
+
+    const fpr = 0.001; // false positive rate (0.1%)
+    const numClientElements = 10; // Size of the client set to check
+    const numTotalElements = 100; // Maximum size of the server set
+    const revealIntersection = false; // Allows to reveal the intersection (true)
+  
+  
+    const server = psi.server.createWithNewKey(revealIntersection)
+
+    const serverInputs = ['r1f93ckm', 'r1f963uz', 'r1f94z5q', 'r1f91rwj', 'r1f94jfz', 'r1f936kn', 'r1f963et', 'r1f96500', 'r1f965cz', 'r1f96k00']
   
     const serverSetup = server.createSetupMessage(
       fpr,
