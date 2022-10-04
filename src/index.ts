@@ -7,6 +7,8 @@ var app = express();
 const cors = require('cors');
 var bodyParser = require('body-parser');
 
+import 'reflect-metadata';
+
 require('dotenv').config();
  
 // create application/json parser
@@ -41,9 +43,6 @@ app.get('/', function (req: Request, res: Response) {
 });
 
 app.post('/movies', jsonParser, function (req: Request, res: Response) {
-  // console.log(req.body)
-  // res.header("Access-Control-Allow-Origin", "*");
-  // res.send("OK")
 
   (async () => {
 
@@ -64,11 +63,47 @@ app.post('/movies', jsonParser, function (req: Request, res: Response) {
       numClientElements,
       serverInputs
     )
+    const clientRequest = Uint8Array.from(Uint8Array.from(req.body.data))
+    
+
+    const deserializedClientRequest = psi.request.deserializeBinary(
+      clientRequest
+    )
   
-    // let data: number[] = [] 
-    // for (const [key , value] of Object.entries(req.body.data)) {
-    //   data.push(value as number)
-    // }
+    // Process the client's request and return to the client
+    const serverResponse = server.processRequest(deserializedClientRequest)
+    const serializedServerResponse = serverResponse.serializeBinary()
+
+    // Serialize the server setup. Will be an Uint8Array.
+    const serializedServerSetup = serverSetup.serializeBinary()
+    res.header("Access-Control-Allow-Origin", "*");
+    res.send({
+      serializedServerResponse: Array.from(serializedServerResponse),
+      serializedServerSetup: Array.from(serializedServerSetup)
+    })
+  })()  
+})
+
+app.post('/maps', jsonParser, function (req: Request, res: Response) {
+  (async () => {
+
+    const psi = await PSI()
+
+    const fpr = 0.001; // false positive rate (0.1%)
+    const numClientElements = 10; // Size of the client set to check
+    const numTotalElements = 100; // Maximum size of the server set
+    const revealIntersection = false; // Allows to reveal the intersection (true)
+  
+  
+    const server = psi.server.createWithNewKey(revealIntersection)
+
+    const serverInputs = ['r1f93ckm', 'r1f963uz', 'r1f94z5q', 'r1f91rwj', 'r1f94jfz', 'r1f936kn', 'r1f963et', 'r1f96500', 'r1f965cz', 'r1f96k00']
+  
+    const serverSetup = server.createSetupMessage(
+      fpr,
+      numClientElements,
+      serverInputs
+    )
     const clientRequest = Uint8Array.from(Uint8Array.from(req.body.data))
     
 
@@ -91,8 +126,17 @@ app.post('/movies', jsonParser, function (req: Request, res: Response) {
 })
 
 
-var server = app.listen(process.env.PORT || 8081, function () {
-   var host = server.address().address
-   var port = server.address().port
-   console.log("Example app listening at http://%s:%s", host, port)
+import SocketServer from './socket'
+
+const http = require('http').createServer(app)
+
+const io = SocketServer(http)
+
+var server = http.listen(process.env.PORT || 8081, function () {
+  var host = server.address().address
+  var port = server.address().port
+  console.log("Example app listening at http://%s:%s", host, port)
 })
+
+
+
