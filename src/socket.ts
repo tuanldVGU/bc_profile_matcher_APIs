@@ -1,5 +1,5 @@
 import * as http from 'http'
-import {Server} from 'socket.io'
+import {Server, Socket} from 'socket.io'
 import { useSocketServer } from 'socket-controllers'
 
 // Generate Room ID  
@@ -19,6 +19,7 @@ export default (httpServer: http.Server) => {
 
   const sockets: 
   { [index: string]: {
+    socket: Socket,
     name: string,
     did: string,
     is_playing: boolean,
@@ -31,24 +32,25 @@ export default (httpServer: http.Server) => {
   } } = {}; // stores the ongoing conversations
 
 
-  io.on('connect', socket => {
-    console.log("New socket", socket.id)
+  io.on('connection', socket => {
     socket.emit('connected', {"id": socket.id })
 
     //Register
-    socket.on('checkDetail', data => {
-      const flag = Object.keys(sockets).some(x => x == data.did)
+    socket.on('checkUserDetail', data => {
+      console.log(`checking`)
+      const flag = Object.values(sockets).some(x => x.did == data.did)
       if (!flag) {  
         sockets[data.id] = {
+            socket: socket,
             did: data.did,  
             is_playing: false,  
-            name: `Matcher-${Object.keys(sockets).length + 1}`,
+            // name: `Matcher-${Object.keys(sockets).length + 1}`,
+            name: data.did,
             room_id: null  
         }
       }  
       socket.emit('checkUserDetailResponse', !flag); 
-    } 
-    )
+    })
 
     //Chat list
     socket.on('getOpponents', (data: {
@@ -66,35 +68,70 @@ export default (httpServer: http.Server) => {
       socket.emit('getOpponentsResponse', response);  
       socket.broadcast.emit('newOpponentAdded', {  
           id: socket.id,
-          did: sockets[socket.id].did, 
-          name: sockets[socket.id].name
+          did: sockets[socket.id]?.did || 'inVALID', 
+          name: sockets[socket.id]?.name || 'inVALID'
       });  
     });
 
+
+    socket.on('targetMatching', (data: {
+      sender: string,
+      senderName: string
+      id: string,
+      message: Uint8Array,
+      type: string
+    }) => {
+      data.type == "movies" ? sockets[data.id].socket.emit('requestMovies', {
+          sender: data.sender,
+          senderName: data.senderName,
+          message: data.message
+        }):
+        data.type == "locations" ? sockets[data.id].socket.emit('requestLocations', {
+          sender: data.sender,
+          senderName: data.senderName,
+          message: data.message
+        }): (()=>{})()
+    })
+
+    socket.on('responseMatching', (data: {
+      senderName: string,
+      target: string,
+      serializedServerResponse: Uint8Array,
+      serializedServerSetup: Uint8Array,
+      type: string
+    }) => {
+      sockets[data.target].socket.emit('resultMatching', {
+        senderName: data.senderName,
+        serializedServerResponse: data.serializedServerResponse,
+        serializedServerSetup: data.serializedServerSetup,
+        type: data.type
+      })
+    })
+
     //Select matcher
-    socket.on('selectOpponent', (data:{id: string}) => {  
-      let response = { status: false, message: "Matcher is matching with someone else." }
-      if (!sockets[data.id].is_playing) {  
-        var roomId = uuidv4();  
-        sockets[data.id].is_playing = true;  
-        sockets[socket.id].is_playing = true;  
-        sockets[data.id].room_id = roomId;  
-        sockets[socket.id].room_id = roomId;  
+    // socket.on('selectOpponent', (data:{id: string}) => {  
+    //   let response = { status: false, message: "Matcher is matching with someone else." }
+    //   if (!sockets[data.id].is_playing) {  
+    //     var roomId = uuidv4();  
+    //     sockets[data.id].is_playing = true;  
+    //     sockets[socket.id].is_playing = true;  
+    //     sockets[data.id].room_id = roomId;  
+    //     sockets[socket.id].room_id = roomId;  
 
-        rooms[roomId] = {  
-            player1: socket.id,  
-            player2: data.id,  
-            whose_turn: socket.id
-        };  
+    //     rooms[roomId] = {  
+    //         player1: socket.id,  
+    //         player2: data.id,  
+    //         whose_turn: socket.id
+    //     };  
 
-        io.in(socket.id).socketsJoin(roomId);  
-        io.in(data.id).socketsJoin(roomId);  
-        io.emit('excludeMatchers', [socket.id, data.id]);  
-        io.to(roomId).emit('gameStarted', { status: true, game_id: roomId, game_data: rooms[roomId] });  
+    //     io.in(socket.id).socketsJoin(roomId);  
+    //     io.in(data.id).socketsJoin(roomId);  
+    //     io.emit('excludeMatchers', [socket.id, data.id]);  
+    //     io.to(roomId).emit('gameStarted', { status: true, game_id: roomId, game_data: rooms[roomId] });  
 
-      }  
+    //   }  
       
-    }); 
+    // })
 
   })
   // useSocketServer(io, {controllers: [__dirname + "/api/controllers/*.ts"]})
