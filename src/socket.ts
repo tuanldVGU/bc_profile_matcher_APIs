@@ -15,6 +15,7 @@ export default (httpServer: http.Server) => {
       origin: "*"
     }
   })
+  console.log((httpServer as any).address().port)
 
   const sockets: 
   { [index: string]: {
@@ -24,11 +25,8 @@ export default (httpServer: http.Server) => {
     is_playing: boolean,
     room_id: string | null
   } }= {}; // stores all the connected clients  
-  const rooms: { [index: string]: {
-    player1: string,  
-    player2: string,  
-    whose_turn: string,
-  } } = {}; // stores the ongoing conversations
+
+  console.log("Create sockets.io")
 
 
   io.on('connection', socket => {
