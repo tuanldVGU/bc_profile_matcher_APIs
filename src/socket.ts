@@ -15,7 +15,6 @@ export default (httpServer: http.Server) => {
       origin: "*"
     }
   })
-  console.log((httpServer as any).address().port)
 
   const sockets: 
   { [index: string]: {
