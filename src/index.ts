@@ -129,6 +129,7 @@ app.post('/maps', jsonParser, function (req: Request, res: Response) {
 import SocketServer from './socket'
 
 const http = require('http').createServer(app)
+const io = SocketServer(server)
 
 var server = http.listen(process.env.PORT || 8081, function () {
   var host = server.address().address
@@ -137,7 +138,9 @@ var server = http.listen(process.env.PORT || 8081, function () {
   console.log(`Example app listening at http://${host}:${port}`)
 })
 
-SocketServer(server)
+
+
+
 
 
 
