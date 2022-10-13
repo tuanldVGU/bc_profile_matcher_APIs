@@ -1,6 +1,5 @@
 import * as http from 'http'
 import {Server, Socket} from 'socket.io'
-import { useSocketServer } from 'socket-controllers'
 
 // Generate Room ID  
 function uuidv4() {  

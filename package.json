@@ -1,7 +1,7 @@
 {
   "scripts": {
     "start:dev": "nodemon",
-    "start": "node app.js"
+    "start": "ts-node src/index.ts"
   },
   "devDependencies": {
     "@types/node": "^18.7.16",
