@@ -1,20 +1,14 @@
 import * as http from 'http'
 import {Server, Socket} from 'socket.io'
 
-// Generate Room ID  
-function uuidv4() {  
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {  
-      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);  
-      return v.toString(16);  
-  });  
-}  
-
 export default (httpServer: http.Server) => {
   const io = new Server(httpServer, {
     cors: {
       origin: "*"
     }
   })
+
+  // io.set('transports', ['websocket'])
 
   const sockets: 
   { [index: string]: {
@@ -103,34 +97,7 @@ export default (httpServer: http.Server) => {
         type: data.type
       })
     })
-
-    //Select matcher
-    // socket.on('selectOpponent', (data:{id: string}) => {  
-    //   let response = { status: false, message: "Matcher is matching with someone else." }
-    //   if (!sockets[data.id].is_playing) {  
-    //     var roomId = uuidv4();  
-    //     sockets[data.id].is_playing = true;  
-    //     sockets[socket.id].is_playing = true;  
-    //     sockets[data.id].room_id = roomId;  
-    //     sockets[socket.id].room_id = roomId;  
-
-    //     rooms[roomId] = {  
-    //         player1: socket.id,  
-    //         player2: data.id,  
-    //         whose_turn: socket.id
-    //     };  
-
-    //     io.in(socket.id).socketsJoin(roomId);  
-    //     io.in(data.id).socketsJoin(roomId);  
-    //     io.emit('excludeMatchers', [socket.id, data.id]);  
-    //     io.to(roomId).emit('gameStarted', { status: true, game_id: roomId, game_data: rooms[roomId] });  
-
-    //   }  
-      
-    // })
-
   })
-  // useSocketServer(io, {controllers: [__dirname + "/api/controllers/*.ts"]})
 
   return io
 }

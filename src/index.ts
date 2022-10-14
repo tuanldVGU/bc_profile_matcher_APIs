@@ -130,15 +130,16 @@ import SocketServer from './socket'
 
 const http = require('http').createServer(app)
 
+const io = SocketServer(http)
 
 var server = http.listen(process.env.PORT || 8081, function () {
   var host = server.address().address
   var port = server.address().port
-  console.log(server.address())
-  console.log(`Example app listening at http://${host}:${port}`)
+  console.log(`Example app listening at http://localhost:${port}`)
 })
 
-const io = SocketServer(server)
+
+
 
 
 
